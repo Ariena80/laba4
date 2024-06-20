@@ -1,20 +1,17 @@
-from importlib import reload
-import uvicorn
+from typing import List
+
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
-from sqlalchemy.exc import IntegrityError
-
 
 # Создание объекта FastAPI
 app = FastAPI()
 
-app = FastAPI()
 
 # Настройка базы данных MySQL
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://isp_is_test:12345@192.168.25.23/isp_is_test"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://isp_p_Morozova:12345@77.91.86.135:8090/isp_p_Morozova"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -130,3 +127,12 @@ def create_bank(bank: Bank, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_bank)
     return db_bank
+
+# Получение всех клиентов по ID банка
+@app.get("/banks/{bank_id}/clients", response_model=List[Client])
+def read_bank_clients(bank_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    clients = db.query(Client).filter(Client.bankId == bank_id).offset(skip).limit(limit).all()
+    return clients
+
+#
+
