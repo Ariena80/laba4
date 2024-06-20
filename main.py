@@ -128,11 +128,67 @@ def create_bank(bank: Bank, db: Session = Depends(get_db)):
     db.refresh(db_bank)
     return db_bank
 
+# Обновление информации о банке
+@app.put("/banks/{bank_id}", response_model=Bank)
+def update_bank(bank_id: int, bank: Bank, db: Session = Depends(get_db)):
+    db_bank = db.query(Bank).filter(Bank.id == bank_id).first()
+    if db_bank is None:
+        raise HTTPException(status_code=404, detail="Bank not found")
+    for var, value in bank.dict().items():
+        setattr(db_bank, var, value) if value is not None else None
+    db.commit()
+    db.refresh(db_bank)
+    return db_bank
+
+# Добавление нового клиента
+@app.post("/clients/", response_model=Client)
+def create_client(client: Client, db: Session = Depends(get_db)):
+    db_client = Client(**client.dict())
+    db.add(db_client)
+    db.commit()
+    db.refresh(db_client)
+    return db_client
+
 # Получение всех клиентов по ID банка
 @app.get("/banks/{bank_id}/clients", response_model=List[Client])
 def read_bank_clients(bank_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     clients = db.query(Client).filter(Client.bankId == bank_id).offset(skip).limit(limit).all()
     return clients
 
-#
+# Добавление новой операции
+@app.post("/operations/", response_model=CashWithdrawal)
+def create_operation(operation: CashWithdrawal, db: Session = Depends(get_db)):
+    db_operation = CashWithdrawal(**operation.dict())
+    db.add(db_operation)
+    db.commit()
+    db.refresh(db_operation)
+    return db_operation
+
+# Получение всех операций по ID банкомата
+@app.get("/atms/{atm_id}/operations", response_model=List[CashWithdrawal])
+def read_atm_operations(atm_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    operations = db.query(CashWithdrawal).filter(CashWithdrawal.atmId == atm_id).offset(skip).limit(limit).all()
+    return operations
+
+# Получение всех операций по ID клиента
+@app.get("/clients/{client_id}/operations", response_model=List[CashWithdrawal])
+def read_client_operations(client_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    operations = db.query(CashWithdrawal).filter(CashWithdrawal.clientId == client_id).offset(skip).limit(limit).all()
+    return operations
+
+
+# Добавление номера банкомата к банку
+@app.post("/banks/{bank_id}/atms/{atm_number}")
+def add_atm_to_bank(bank_id: int, atm_number: str, db: Session = Depends(get_db)):
+    bank = db.query(Bank).filter(Bank.id == bank_id).first()
+    if bank is None:
+        raise HTTPException(status_code=404, detail="Bank not found")
+    atm = db.query(ATM).filter(ATM.atmNumber == atm_number).first()
+    if atm is None:
+        raise HTTPException(status_code=404, detail="ATM not found")
+    bank.atms.append(atm)
+    db.commit()
+    return {"message": "ATM added to bank"}
+
+
 
