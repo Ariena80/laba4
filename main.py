@@ -11,7 +11,7 @@ app = FastAPI(title='Лабораторная работа №4')
 
 
 # Настройка базы данных MySQL
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://isp_p_Morozova:12345@77.91.86.135:8090/isp_p_Morozova"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://isp_p_Morozova:12345@77.91.86.135/isp_p_Morozova"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
